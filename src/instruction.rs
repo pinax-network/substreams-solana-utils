@@ -201,6 +201,7 @@ where
         *popped_instruction.logs.borrow_mut() = log_stack.close(logs, popped_instruction.program_id());
 
         if !instruction_stack.is_empty() {
+            *popped_instruction.parent_instruction.borrow_mut() = Some(Rc::downgrade(instruction_stack.last().unwrap()));
             instruction_stack.last_mut().unwrap().inner_instructions.borrow_mut().push(popped_instruction);
         } else {
             structured_instructions.push(popped_instruction)
