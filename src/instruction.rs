@@ -140,8 +140,9 @@ impl<'a> LogStack<'a> {
 
     pub fn close<I>(&mut self, logs: &mut Peekable<I>, program_id: PubkeyRef) -> Option<Vec<Log<'a>>>
     where
-        I: Iterator<Item = Log<'a>>
+        I: Iterator<Item = Log<'a>>,
     {
+        // 1. Fast-path exits that were already safe
         if PROGRAMS_WITHOUT_LOGGING.iter().any(|x| *x == program_id) {
             return Some(Vec::new());
         }
@@ -149,22 +150,34 @@ impl<'a> LogStack<'a> {
             return None;
         }
 
-        loop {
-            let log = logs.next().unwrap();
-
+        // 2. Read logs as long as they’re available
+        while let Some(log) = logs.next() {
+            // early-outs identical to the old behaviour
             if log.is_truncated() {
                 self.is_truncated = true;
                 return None;
-            } else if log.is_invoke() {
+            }
+            if log.is_invoke() {
                 return None;
             }
 
+            // 3. Push onto the current frame (or start one if the stack is empty)
             let is_success = log.is_success();
-            self.stack.last_mut().unwrap().push(log);
+            if let Some(frame) = self.stack.last_mut() {
+                frame.push(log);
+            } else {
+                // stack was unexpectedly empty – create a frame so we don’t panic
+                self.stack.push(vec![log]);
+            }
+
+            // 4. Successful completion: hand the frame back to the caller
             if is_success {
-                return self.stack.pop()
+                return self.stack.pop();
             }
         }
+
+        // 5. Iterator exhausted without a success marker
+        None
     }
 }
 
