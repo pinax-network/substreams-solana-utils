@@ -153,7 +153,7 @@ impl<'a> LogStack<'a> {
                 self.is_truncated = true;
                 return None;
             } else if log.is_invoke() {
-                panic!("Unexpected invoke log");
+                return None;
             }
 
             let is_success = log.is_success();
