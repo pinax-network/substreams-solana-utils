@@ -7,10 +7,10 @@ edition = "2021"
 name = "substreams_solana_utils"
 
 [dependencies]
-substreams = "^0.5.0"
-substreams-solana = { git = "https://github.com/streamingfast/substreams-solana", branch = "master" }
-bs58 = "0.5.0"
-regex = "1.10.5"
+substreams = "^0.6.0"
+substreams-solana = "0.14.1"
+bs58 = "0.5.1"
+regex = "1.11.1"
 base64 = "0.22.1"
-borsh = { version = "1.5.1", features = ["derive"] }
-anyhow = "1.0.86"
+borsh = { version = "1.5.7", features = ["derive"] }
+anyhow = "1.0.98"

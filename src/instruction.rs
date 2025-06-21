@@ -120,17 +120,20 @@ impl<'a> LogStack<'a> {
         if PROGRAMS_WITHOUT_LOGGING.iter().any(|x| *x == program_id) || self.is_truncated {
             return;
         }
-        loop {
-            let log = logs.next().unwrap();
-
+        while let Some(log) = logs.next() {
             if log.is_truncated() {
                 self.is_truncated = true;
-                break;
+                break;                  // stop: we hit a truncation marker
             } else if log.is_invoke() {
-                self.stack.push(vec![log]);
-                break;
+                self.stack.push(vec![log]);  // start a fresh frame for an invocation
+                break;                  // stop: we got the invoke
             } else {
-                self.stack.last_mut().unwrap().push(log);
+                // either extend the current frame, or create one if none exists
+                if let Some(frame) = self.stack.last_mut() {
+                    frame.push(log);
+                } else {
+                    self.stack.push(vec![log]);
+                }
             }
         }
     }
